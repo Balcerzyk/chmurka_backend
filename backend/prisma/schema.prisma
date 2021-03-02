@@ -15,10 +15,10 @@ model Movie {
   tconst          String
   titleType       String
   primaryTitle    String
-  orginalTitle    String
-  isAdult         Boolean   
+  originalTitle   String
+  isAdult         Boolean
   startYear       Int
-  endYear         Int
-  runtimeMinutes  Int
-  genres          String
+  endYear         Int?
+  runtimeMinutes  Int?
+  genres          String[]
 }
