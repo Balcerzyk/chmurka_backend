@@ -53,7 +53,7 @@ async function main() {
       ...rest
     } = record;
 
-    /* await prisma.movie.create({
+    await prisma.movie.create({
       data: {
         ...rest,
         isAdult: !!(isAdult === "1"),
@@ -62,9 +62,7 @@ async function main() {
         runtimeMinutes:
           runtimeMinutes === "\\N" ? null : parseInt(runtimeMinutes, 10),
       },
-    }); */
-
-    console.log(record.originalTitle);
+    });
   }
 }
 main()
