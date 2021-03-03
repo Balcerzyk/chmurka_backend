@@ -23,7 +23,7 @@ export default {
               tconst: req.body.tconst,         
               titleType:  req.body.titleType,      
               primaryTitle:  req.body.primaryTitle,    
-              orginalTitle:  req.body.orginalTitle,    
+              originalTitle :  req.body.originalTitle ,    
               isAdult:  (String(req.body.isAdult).toLowerCase() == "true" ? true : false),           
               startYear:  parseInt(req.body.startYear),       
               endYear:  parseInt(req.body.endYear),         
