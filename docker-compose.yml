@@ -1,6 +1,6 @@
 version: "2"
 services:
-  pg:
+  postgres:
     image: postgres:11
     restart: "always"
     expose:
@@ -24,7 +24,9 @@ services:
   backend:
     build: ./backend
     command: npm run dev
-    volumes: 
-      - ./backend/:/usr/backend/
+    volumes:
+      - /usr/backend/node_modules
     ports:
-      - "8000:8000"  
+      - "8000:8000"
+    depends_on:
+      - postgres
