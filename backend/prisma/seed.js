@@ -1,12 +1,21 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const fs = require("fs");
-const fsPromises = require("fs/promises");
+import pkg from "@prisma/client";
+const { PrismaClient } = pkg;
+import fs from "fs";
+import fsPromises from "fs/promises";
 
-const path = require("path");
-const parse = require("csv-parse");
-const fetch = require("node-fetch");
-const zlib = require("zlib");
+import path from "path";
+import parse from "csv-parse";
+import fetch from "node-fetch";
+import zlib from "zlib";
+
+import dotenv from "dotenv";
+
+dotenv.config();
+const prisma = new PrismaClient();
+
+function isNull(data) {
+  return data === "\\N";
+}
 
 async function downloadFile(url, path) {
   const res = await fetch(url);
@@ -19,14 +28,16 @@ async function downloadFile(url, path) {
 }
 
 async function main() {
-  const filePath = path.join(__dirname, "..", "title.basics.tsv.gz");
+  const filePath = new URL("../title.basics.tsv.gz", import.meta.url);
+
+  console.log(filePath);
 
   await fsPromises
     .stat(filePath)
     .then((stats) => {
       return fsPromises.unlink(filePath);
     })
-    .catch();
+    .catch((error) => {});
 
   await downloadFile(
     "https://datasets.imdbws.com/title.basics.tsv.gz",
@@ -43,7 +54,12 @@ async function main() {
 
   source.pipe(zlib.createGunzip()).pipe(parser);
 
+  let count = 0;
+
   for await (const record of parser) {
+    if (process.env.MAX_SEED && count > process.env.MAX_SEED) break;
+    count++;
+
     const {
       isAdult,
       startYear,
@@ -58,9 +74,10 @@ async function main() {
         ...rest,
         isAdult: !!(isAdult === "1"),
         startYear: parseInt(startYear, 10),
-        endYear: endYear === "\\N" ? null : parseInt(endYear, 10),
-        runtimeMinutes:
-          runtimeMinutes === "\\N" ? null : parseInt(runtimeMinutes, 10),
+        endYear: isNull(endYear) ? null : parseInt(endYear, 10),
+        runtimeMinutes: isNull(runtimeMinutes)
+          ? null
+          : parseInt(runtimeMinutes, 10),
       },
     });
   }

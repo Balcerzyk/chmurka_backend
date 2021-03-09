@@ -13,14 +13,6 @@ services:
     volumes:
       - "./db/data:/var/;ib/postgresql/data"
       - "./db/init:/docker-entrypoint-initdb.d"
-  frontend:
-    build: ./frontend
-    command: npm run dev
-    volumes:
-      - ./frontend/:/usr/app/
-      - /usr/app/node_modules
-    ports:
-      - "5000:5000"
   backend:
     build: ./backend
     command: npm run dev
@@ -30,3 +22,13 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+  frontend:
+    build: ./frontend
+    command: npm run dev
+    volumes:
+      - ./frontend/:/usr/app/
+      - /usr/app/node_modules
+    ports:
+      - "5000:5000"
+    depends_on:
+      - backend
