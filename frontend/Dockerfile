@@ -2,10 +2,11 @@ FROM node:14-alpine
 
 WORKDIR /usr/app
 
-COPY rollup.config.js ./
 COPY package*.json ./
 
 RUN npm install
+
+COPY rollup.config.js ./
 
 EXPOSE 5000
 
