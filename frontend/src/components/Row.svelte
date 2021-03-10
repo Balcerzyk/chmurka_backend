@@ -6,7 +6,6 @@
 
   export let item = {};
   export let columns = [];
-  export let index = 0;
   export let editing = false;
 
   let classesDefault = "hover:bg-gray-50 dark-hover:bg-dark-400 border-gray-200 dark:border-gray-400 border-t border-b px-3";
@@ -39,10 +38,10 @@
 <tr
   class={c}
   on:click={(e) => {
-    editing = { [index]: (e.path.find(a => a.localName === "td") || {}).cellIndex }
+    editing = true;
     dispatch("click", item);
   }}
-  class:selected={editing[index]}
+  class:selected={editing}
 >
   {#each columns as column, i}
     <td

@@ -5,3 +5,9 @@
 </script>
 
 <Router {routes} />
+
+<style>
+  :global(body) {
+    overflow: hidden;
+  }
+</style>
