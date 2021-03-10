@@ -1,70 +1,50 @@
 <script>
-  import { DataTable, Image } from "smelte";
+  import DataTable from "smelte/src/components/DataTable";
+
+  import Row from "../components/Row.svelte";
+  import Drawer from "../components/Drawer.svelte";
 
   let data = [];
   let loading = true;
+  let columns = [
+    { label: "ID", field: "id", class: "md:w-10" },
+    { field: "originalTitle", class: "md:w-10" },
+    { field: "titleType", class: "md:w-10" },
+    { field: "primaryTitle", class: "md:w-10" },
+    { field: "isAdult", class: "md:w-10" },
+    { field: "startYear", class: "md:w-10" },
+    { field: "endYear", class: "md:w-10" },
+    { field: "runtimeMinutes", class: "md:w-10" },
+    { field: "genres", class: "md:w-10" },
+  ];
+  let showDrawer = false;
+  let drawerItem = null;
 
   async function getData() {
     if (typeof window === "undefined") return;
 
     loading = true;
-    const res = await fetch("/api/movies");
+    const res = await fetch("//localhost:8000/api/movies");
     const body = await res.json();
 
-    data = body;
+    data = body.data;
 
     setTimeout(() => (loading = false), 500);
   }
 
   getData();
+
+  async function clickCallback(event) {
+    drawerItem = event.detail;
+    showDrawer = true;
+  }
 </script>
 
+<Drawer show={showDrawer} item={drawerItem} />
 <div class="overflow-auto p-1">
-  <DataTable
-    {data}
-    {loading}
-    on:update={({ detail }) => {
-      const { column, item, value } = detail;
-
-      const index = data.findIndex((i) => i.id === item.id);
-
-      data[index][column.field] = value;
-    }}
-    columns={[
-      { label: "ID", field: "id", class: "md:w-10" },
-      {
-        label: "Ep.",
-        value: (v) => `S${v.season}E${v.number}`,
-        class: "md:w-10",
-        editable: false,
-      },
-      { field: "name", class: "md:w-10" },
-      {
-        field: "summary",
-        textarea: true,
-        value: (v) => (v && v.summary ? v.summary : ""),
-        add: "text-sm text-gray-700 caption md:w-full sm:w-64",
-        remove: "text-right",
-        headerRemove: "justify-end",
-        iconAfter: true,
-      },
-      {
-        field: "thumbnail",
-        component: Image,
-        componentProps: (v) =>
-          v && v.image
-            ? {
-                src: v.image.medium.replace("http", "https"),
-                class: "h-full",
-                height: 100,
-                alt: v.name,
-              }
-            : {},
-        class: "w-48",
-        sortable: false,
-        editable: false,
-        headerRemove: "justify-end",
-      },
-    ]}
-  />
+  <DataTable {data} {loading} {columns}>
+    <svelte:fragment slot="item" let:item let:index>
+      <Row {item} {index} {columns} on:click={clickCallback} />
+    </svelte:fragment>
+  </DataTable>
 </div>
