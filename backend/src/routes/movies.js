@@ -9,6 +9,7 @@ export default () => {
     api.post('/',controller.create);
     api.put('/:id', controller.update);
     api.delete('/:id', controller.delete);
+    
 
     return api;
 }

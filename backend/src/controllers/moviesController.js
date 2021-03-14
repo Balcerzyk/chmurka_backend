@@ -28,7 +28,7 @@ export default {
               startYear:  parseInt(req.body.startYear),       
               endYear:  parseInt(req.body.endYear),         
               runtimeMinutes:  parseInt(req.body.runtimeMinutes),  
-              genres:  req.body.genres          
+              genres:  req.body.genres.split(',')        
             }
         })
         return res.status(201).send({ data: movie, message: `Movie was created` });
