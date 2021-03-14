@@ -1,11 +1,9 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { Button } from "smelte";
 
-  import {
-    Button
-  } from "smelte";
+  export let id;
 
+  function onClick(event) {
+    event.preventDefault();
+  }
 </script>
-
-
-<Button>Remove</Button>

@@ -3,10 +3,11 @@
 
   import Row from "../components/Row.svelte";
   import Drawer from "../components/Drawer.svelte";
-  import Remove from "../components/Remove.svelte";
   import { Button } from "smelte";
 
   let data = [];
+  let statsData = null;
+
   let loading = true;
   let columns = [
     { label: "ID", field: "id", class: "md:w-10" },
@@ -18,7 +19,6 @@
     { field: "endYear", class: "md:w-10" },
     { field: "runtimeMinutes", class: "md:w-10" },
     { field: "genres", class: "md:w-10" },
-    { label: "Remove", class: "md:w-10", component: Remove },
   ];
 
   let showDrawer = false;
@@ -45,6 +45,13 @@
 
     data = body.data;
 
+    const statsRes = await fetch("//localhost:8000/api/statistics");
+    const statsBody = await statsRes.json();
+
+    statsData = statsBody.data;
+
+    showDrawer = false;
+
     setTimeout(() => (loading = false), 500);
   }
 
@@ -64,28 +71,42 @@
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            // 'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: JSON.stringify(data),
         });
         const body = await res.json();
 
         getData();
+        break;
       }
       case "create": {
         const res = await fetch(`//localhost:8000/api/movies`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // 'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: JSON.stringify(data),
         });
         const body = await res.json();
 
         getData();
+        break;
       }
     }
+  }
+
+  async function removeCallback({ detail }) {
+    const { id } = detail;
+
+    const res = await fetch(`//localhost:8000/api/movies/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const body = await res.json();
+
+    getData();
   }
 
   async function createCallback() {
@@ -104,11 +125,16 @@
   }
 </script>
 
-<Drawer bind:show={showDrawer} item={drawerItem} on:saveItem={saveCallback} />
+<Drawer
+  bind:show={showDrawer}
+  item={drawerItem}
+  on:saveItem={saveCallback}
+  on:removeItem={removeCallback}
+/>
 
 <Button add="m-8" on:click={createCallback}>Create New Item</Button>
 <div class="px-8">
-  <DataTable {data} {loading} {columns}>
+  <DataTable {data} {loading} {columns} sortBy={{ field: "id" }} asc={true}>
     <svelte:fragment slot="item" let:item let:index>
       <Row
         {item}
@@ -120,3 +146,13 @@
     </svelte:fragment>
   </DataTable>
 </div>
+<section class="my-4 px-8">
+  <h2>Statistics</h2>
+  {#if statsData}
+    <ul>
+      {#each Object.entries(statsData) as [key, value]}
+        <li><b>{key}:</b> {value}</li>
+      {/each}
+    </ul>
+  {/if}
+</section>
