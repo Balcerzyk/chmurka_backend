@@ -1,0 +1,50 @@
+---
+- name: database
+  hosts: db
+  remote_user: root
+  become: yes
+
+  tasks:
+    - name: ensure postgresql is at the latest version
+      apt:
+        name: postgresql
+        state: latest
+    - name: ensure that postgresql is started
+      service:
+        name: postgresql
+        state: started
+
+- name: frontend
+  become: yes
+  hosts: frontend
+
+  tasks:
+    - name: Install Apache
+      apt: name=apache2 update_cache=yes state=latest
+
+    - name: Remove old website files
+      command: rm -rf /tmp/website
+
+    - name: Remove old website files (apache)
+      command: rm -rf /var/www/html
+
+    - name: Copy website directories
+      copy:
+        src: ../frontend/public
+        dest: /tmp/website
+        local_follow: False
+    - command: ls -al /tmp/website/
+      register: copied_files
+    - debug:
+        var: copied_files
+
+    - name: Creating symlinks of webpage
+      file:
+        src: /tmp/website/public
+        dest: /var/www/html
+        state: link
+
+    - command: ls -al /var/www/html
+      register: symlinked_files
+    - debug:
+        var: symlinked_files
