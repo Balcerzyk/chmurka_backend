@@ -5,6 +5,8 @@
   import Drawer from "../components/Drawer.svelte";
   import { Button } from "smelte";
 
+  const apiUrl = __process.env.API_URL;
+
   let data = [];
   let statsData = null;
 
@@ -40,12 +42,12 @@
     if (typeof window === "undefined") return;
 
     loading = true;
-    const res = await fetch("//localhost:8000/api/movies");
+    const res = await fetch(`//${apiUrl}/api/movies`);
     const body = await res.json();
 
     data = body.data;
 
-    const statsRes = await fetch("//localhost:8000/api/statistics");
+    const statsRes = await fetch(`//${apiUrl}/api/statistics`);
     const statsBody = await statsRes.json();
 
     statsData = statsBody.data;
@@ -67,7 +69,7 @@
 
     switch (type) {
       case "update": {
-        const res = await fetch(`//localhost:8000/api/movies/${data.id}`, {
+        const res = await fetch(`//${apiUrl}/api/movies/${data.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -80,7 +82,7 @@
         break;
       }
       case "create": {
-        const res = await fetch(`//localhost:8000/api/movies`, {
+        const res = await fetch(`//${apiUrl}/api/movies`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -98,7 +100,7 @@
   async function removeCallback({ detail }) {
     const { id } = detail;
 
-    const res = await fetch(`//localhost:8000/api/movies/${id}`, {
+    const res = await fetch(`//${apiUrl}/api/movies/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

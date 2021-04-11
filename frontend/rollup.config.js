@@ -8,6 +8,8 @@ import replace from "@rollup/plugin-replace";
 import sveltePreprocess from "svelte-preprocess";
 import smelte from "smelte/rollup-plugin-smelte";
 
+import { config } from "dotenv";
+
 const production = !process.env.ROLLUP_WATCH;
 
 function serve() {
@@ -49,6 +51,7 @@ export default {
       __process: JSON.stringify({
         env: {
           ...process.env,
+          ...config().parsed,
         },
       }),
     }),
