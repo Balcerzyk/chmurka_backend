@@ -3,20 +3,26 @@
   hosts: db
   remote_user: root
   become: yes
-
-  tasks:
-    - name: ensure postgresql is at the latest version
-      apt:
-        name: postgresql
-        state: latest
-    - name: ensure that postgresql is started
-      service:
-        name: postgresql
-        state: started
+  roles:
+    - role: ANXS.postgresql
+      vars:
+        postgresql_version: 11
+        postgresql_listen_addresses: "*"
+        postgresql_default_auth_method: "trust"
+        postgresql_databases:
+          - name: movies
+        postgresql_pg_hba_custom:
+          - {
+              type: "host",
+              database: "all",
+              user: "all",
+              address: "0.0.0.0/0",
+              method: "trust",
+            }
 
 - name: frontend
-  become: yes
   hosts: frontend
+  become: yes
 
   tasks:
     - name: Install Apache
@@ -33,10 +39,6 @@
         src: ../frontend/public
         dest: /tmp/website
         local_follow: False
-    - command: ls -al /tmp/website/
-      register: copied_files
-    - debug:
-        var: copied_files
 
     - name: Creating symlinks of webpage
       file:
@@ -44,29 +46,22 @@
         dest: /var/www/html
         state: link
 
-    - command: ls -al /var/www/html
-      register: symlinked_files
-    - debug:
-        var: symlinked_files
-
-
 - name: backend
   hosts: backend
   become: yes
 
   vars:
     node_version: 15.14.0
-    project_path: /vagrant/backend
-
+    project_path: /tmp/backend
 
   tasks:
-    - name: SERVER | Install dependencies
+    - name: Install dependencies for nvm
       apt:
         pkg:
           - git
           - curl
 
-    - name: "nvm"
+    - name: "Install nvm"
       shell: >
         curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
       args:
@@ -74,7 +69,7 @@
         chdir: "{{ ansible_env.HOME }}"
         creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
 
-    - name: "node"
+    - name: "Install node"
       shell: >
         . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install {{ node_version }} && nvm run {{node_version}} --version && nvm alias default {{node_version}}
       args:
@@ -84,20 +79,44 @@
       loop:
         - node
 
-    - name: install node_modules
+    - name: Remove old files
+      command: "rm -rf {{ project_path }}"
+
+    - name: Copy files
+      copy:
+        src: ../backend
+        dest: /tmp
+        local_follow: False
+
+    - name: Install node_modules
       npm:
         path: "{{ project_path }}"
+        ci: yes
         executable: "{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin/npm"
       environment:
         PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin"
 
-    - name: "Install forever (to run Node.js app)."
+    - name: Run prisma generate
+      command: "npx prisma generate"
+      args:
+        chdir: "{{ project_path }}"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin"
+
+    - name: Run prisma migrate
+      command: "npx prisma migrate reset --force --preview-feature"
+      args:
+        chdir: "{{ project_path }}"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin"
+
+    - name: "Install forever"
       npm: name=forever global=yes state=present
       environment:
         PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin"
 
     - name: Get app process id
-      shell: "ps aux | grep sirv | grep -v grep | awk '{print $2}'"
+      shell: "ps aux | grep node | grep -v grep | awk '{print $2}'"
       register: process_id
 
     - name: Stop app process
