@@ -108,3 +108,5 @@ frontend/public/build
 frontend/public/global.css
 
 backend/title.basics.tsv.gz
+
+.vagrant/
