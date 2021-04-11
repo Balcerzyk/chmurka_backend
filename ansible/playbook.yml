@@ -48,3 +48,67 @@
       register: symlinked_files
     - debug:
         var: symlinked_files
+
+
+- name: backend
+  hosts: backend
+  become: yes
+
+  vars:
+    node_version: 15.14.0
+    project_path: /vagrant/backend
+
+
+  tasks:
+    - name: SERVER | Install dependencies
+      apt:
+        pkg:
+          - git
+          - curl
+
+    - name: "nvm"
+      shell: >
+        curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+      args:
+        executable: /bin/bash
+        chdir: "{{ ansible_env.HOME }}"
+        creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+
+    - name: "node"
+      shell: >
+        . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install {{ node_version }} && nvm run {{node_version}} --version && nvm alias default {{node_version}}
+      args:
+        executable: /bin/bash
+        chdir: "{{ ansible_env.HOME }}"
+        creates: "{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}"
+      loop:
+        - node
+
+    - name: install node_modules
+      npm:
+        path: "{{ project_path }}"
+        executable: "{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin/npm"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin"
+
+    - name: "Install forever (to run Node.js app)."
+      npm: name=forever global=yes state=present
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin"
+
+    - name: Get app process id
+      shell: "ps aux | grep sirv | grep -v grep | awk '{print $2}'"
+      register: process_id
+
+    - name: Stop app process
+      shell: kill -9 {{ item }}
+      with_items: process_id.stdout_lines
+      ignore_errors: True # Ignore error when no process running
+
+    - name: Start application
+      command: forever start "{{ project_path }}/src/index.js"
+      environment:
+        NODE_ENV: production
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/.nvm/versions/node/v{{ node_version }}/bin"
+      args:
+        chdir: "{{ project_path }}"
