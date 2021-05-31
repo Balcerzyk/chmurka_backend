@@ -2,14 +2,17 @@ FROM node:14-alpine
 
 WORKDIR /usr/app
 
-COPY package*.json ./
+COPY package.json ./
 
 RUN npm install
 
 COPY rollup.config.js ./
 
-EXPOSE 5000
+COPY ./ ./
 
 ENV HOST=0.0.0.0
 
-CMD [ "npm", "run", "dev" ]
+RUN npm run build
+
+FROM nginx:latest
+COPY --from=0 /usr/app/public /usr/share/nginx/html/
