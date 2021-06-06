@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: postgres-pod
   labels:
-    app: backend
+    app: postgres
 spec:
   containers:
     - image: postgres
@@ -12,6 +12,6 @@ spec:
         - configMapRef:
             name: postgres-config
       ports:
-        - containerPort: 80
+        - containerPort: 5432
           name: http
           protocol: TCP

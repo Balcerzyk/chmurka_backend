@@ -11,7 +11,7 @@ RUN npm install
 
 RUN npx prisma generate
 
-EXPOSE 8000
+EXPOSE 80
 
 ENV HOST=0.0.0.0
 
