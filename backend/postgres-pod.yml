@@ -5,6 +5,10 @@ metadata:
   labels:
     app: postgres
 spec:
+  volumes:
+    - name: postgresdb
+      persistentVolumeClaim:
+        claimName: postgres-pv-claim
   containers:
     - image: postgres
       name: postgres-container
@@ -15,3 +19,6 @@ spec:
         - containerPort: 5432
           name: http
           protocol: TCP
+      volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgresdb
